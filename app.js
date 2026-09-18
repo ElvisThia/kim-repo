@@ -1,5 +1,7 @@
-const APP_VERSION = "1.0.0";
-const STORE_KEY = "kim-store-v1";
+const APP_VERSION = "1.0.1";
+const APP_NAME = "Julie-Store";
+const STORE_KEY = "julie-store-v1";
+const OLD_STORE_KEYS = ["kim-store-v1"];
 const LEGACY_KEY = "kim-store-prototype-items";
 
 const STATUS_LABELS = {
@@ -322,6 +324,8 @@ const initialState = {
 };
 
 const state = { ...initialState };
+const composingFields = new Set();
+let renderTimer = null;
 let db = loadDb();
 
 const app = document.querySelector("#app");
@@ -335,6 +339,8 @@ document.addEventListener("click", handleClick);
 document.addEventListener("input", handleInput);
 document.addEventListener("change", handleChange);
 document.addEventListener("submit", handleSubmit);
+document.addEventListener("compositionstart", handleCompositionStart);
+document.addEventListener("compositionend", handleCompositionEnd);
 dialog.addEventListener("click", (event) => {
   if (event.target === dialog) closeDialog();
 });
@@ -351,6 +357,15 @@ function loadDb() {
     if (stored?.items && stored?.tags && stored?.sections) return normalizeDb(stored);
   } catch {
     // Fall through to legacy migration or seed data.
+  }
+
+  for (const oldKey of OLD_STORE_KEYS) {
+    try {
+      const stored = JSON.parse(localStorage.getItem(oldKey));
+      if (stored?.items && stored?.tags && stored?.sections) return normalizeDb(stored);
+    } catch {
+      // Try the next legacy key.
+    }
   }
 
   try {
@@ -479,7 +494,7 @@ function renderHome() {
   const doing = db.items.filter((item) => item.status === "doing").length;
   const done = db.items.filter((item) => item.status === "done" || item.status === "again").length;
   app.innerHTML = `
-    ${renderHeader("Kim-Store", "首页", '<button class="icon-button" type="button" data-action="open-section-form">栏目</button>')}
+    ${renderHeader(APP_NAME, "首页", '<button class="icon-button" type="button" data-action="open-section-form">栏目</button>')}
     <section class="stats-grid">
       <article><strong>${total}</strong><span>全部作品</span></article>
       <article><strong>${doing}</strong><span>正在进行</span></article>
@@ -518,7 +533,7 @@ function renderHomeSection(section) {
 function renderLibrary() {
   const visible = getVisibleItems();
   app.innerHTML = `
-    ${renderHeader("Kim-Store", "资料库", `<button class="icon-button ${state.selectMode ? "is-active" : ""}" type="button" data-action="toggle-select">${state.selectMode ? "取消" : "多选"}</button>`)}
+    ${renderHeader(APP_NAME, "资料库", `<button class="icon-button ${state.selectMode ? "is-active" : ""}" type="button" data-action="toggle-select">${state.selectMode ? "取消" : "多选"}</button>`)}
     ${renderCategoryTabs("library")}
     <section class="search-row">
       <label class="search-box">
@@ -605,7 +620,7 @@ function renderBackup() {
     </section>
     <section class="tool-panel">
       <h2>导入文件</h2>
-      <p>支持 Kim-Store JSON 备份，或包含 title/category/status/creator/date/rating/comment/tags 表头的 CSV。</p>
+      <p>支持 Julie-Store JSON 备份，或包含 title/category/status/creator/date/rating/comment/tags 表头的 CSV。</p>
       <input id="importFile" type="file" accept=".json,.csv,text/csv,application/json" />
       <button class="secondary-button" type="button" data-action="import-file">导入</button>
     </section>
@@ -745,7 +760,7 @@ function renderEmpty(title, body) {
 }
 
 function handleClick(event) {
-  const target = event.target.closest("[data-action]");
+  const target = event.target.closest("button[data-action], [data-action]:not(form)");
   if (!target) return;
   const action = target.dataset.action;
 
@@ -809,8 +824,8 @@ function handleInput(event) {
   if (!field) return;
   const cursor = event.target.selectionStart;
   state[field] = event.target.value;
-  render();
-  restoreInput(field, cursor);
+  if (composingFields.has(field)) return;
+  scheduleRender(field, cursor);
 }
 
 function handleChange(event) {
@@ -820,12 +835,35 @@ function handleChange(event) {
   render();
 }
 
+function handleCompositionStart(event) {
+  const field = event.target.dataset.field;
+  if (field) composingFields.add(field);
+}
+
+function handleCompositionEnd(event) {
+  const field = event.target.dataset.field;
+  if (!field) return;
+  composingFields.delete(field);
+  state[field] = event.target.value;
+  scheduleRender(field, event.target.selectionStart, 0);
+}
+
+function scheduleRender(field, cursor, delay = 90) {
+  window.clearTimeout(renderTimer);
+  renderTimer = window.setTimeout(() => {
+    render();
+    restoreInput(field, cursor);
+  }, delay);
+}
+
 function restoreInput(field, cursor) {
   window.requestAnimationFrame(() => {
     const input = document.querySelector(`[data-field="${field}"]`);
     if (!input) return;
     input.focus();
-    if (typeof cursor === "number") input.setSelectionRange(cursor, cursor);
+    if (typeof cursor === "number" && typeof input.setSelectionRange === "function") {
+      input.setSelectionRange(cursor, cursor);
+    }
   });
 }
 
@@ -1327,7 +1365,7 @@ function downloadBackup() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `kim-store-backup-${getToday()}.json`;
+  link.download = `julie-store-backup-${getToday()}.json`;
   link.click();
   URL.revokeObjectURL(url);
 }

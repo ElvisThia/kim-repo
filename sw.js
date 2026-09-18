@@ -1,9 +1,9 @@
-const CACHE_NAME = "kim-store-static-v2";
+const CACHE_NAME = "julie-store-static-v4";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=9",
-  "./app.js?v=9",
+  "./styles.css?v=10",
+  "./app.js?v=10",
   "./manifest.webmanifest",
   "./assets/covers/before-sunrise.jpg",
   "./assets/covers/blood-merchant.jpg",

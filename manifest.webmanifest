@@ -1,6 +1,6 @@
 {
-  "name": "Kim-Store",
-  "short_name": "Kim-Store",
+  "name": "Julie-Store",
+  "short_name": "Julie-Store",
   "description": "个人图书与影视资料库",
   "start_url": "./index.html",
   "display": "standalone",

@@ -1,5 +1,5 @@
-# Kim-Store
-Kim的图书、影视库
+# Julie-Store
+Julie 的图书、影视库
 
 ## 当前版本
 

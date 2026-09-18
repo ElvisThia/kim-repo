@@ -14,7 +14,7 @@ my $server = IO::Socket::INET->new(
   Reuse => 1,
 ) or die $!;
 
-print "Serving Kim-Store at http://0.0.0.0:$port\n";
+print "Serving Julie-Store at http://0.0.0.0:$port\n";
 
 while (my $client = $server->accept()) {
   my $request = <$client> // "";
