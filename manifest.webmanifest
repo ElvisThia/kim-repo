@@ -1,0 +1,10 @@
+{
+  "name": "Kim-Store",
+  "short_name": "Kim-Store",
+  "description": "个人图书与影视资料库",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f8fb",
+  "theme_color": "#f7f8fb",
+  "lang": "zh-CN"
+}
