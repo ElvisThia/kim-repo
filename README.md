@@ -1,5 +1,5 @@
 # Julie-Store
-Julie 的图书、影视库
+Julie 的图书、影视库等
 
 ## 当前版本
 
